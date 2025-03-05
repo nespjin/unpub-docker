@@ -50,7 +50,8 @@ class App {
   App({
     required this.metaStore,
     required this.packageStore,
-    this.upstream = 'https://pub.dev',
+    // this.upstream = 'https://pub.dev',
+    this.upstream = 'https://mirrors.tuna.tsinghua.edu.cn/dart-pub',
     this.googleapisProxy,
     this.overrideUploaderEmail,
     this.uploadValidator,
@@ -135,7 +136,8 @@ class App {
     var name = item.pubspec['name'] as String;
     var version = item.version;
     return {
-      'archive_url': _resolveUrl(req, '/packages/$name/versions/$version.tar.gz'),
+      'archive_url':
+          _resolveUrl(req, '/packages/$name/versions/$version.tar.gz'),
       'pubspec': item.pubspec,
       'version': version,
     };
@@ -163,9 +165,8 @@ class App {
           semver.Version.parse(a.version), semver.Version.parse(b.version));
     });
 
-    var versionMaps = package.versions
-        .map((item) => _versionToJson(item, req))
-        .toList();
+    var versionMaps =
+        package.versions.map((item) => _versionToJson(item, req)).toList();
 
     return _okWithJson({
       'name': name,
@@ -228,8 +229,7 @@ class App {
   @Route.get('/api/packages/versions/new')
   Future<shelf.Response> getUploadUrl(shelf.Request req) async {
     return _okWithJson({
-      'url': _resolveUrl(req, '/api/packages/versions/newUpload')
-          .toString(),
+      'url': _resolveUrl(req, '/api/packages/versions/newUpload').toString(),
       'fields': {},
     });
   }
@@ -237,7 +237,8 @@ class App {
   @Route.post('/api/packages/versions/newUpload')
   Future<shelf.Response> upload(shelf.Request req) async {
     try {
-      var uploader = await _getUploaderEmail(req);
+      // var uploader = await _getUploaderEmail(req);
+      var uploader = '';
 
       var contentType = req.headers['content-type'];
       if (contentType == null) throw 'invalid content type';
@@ -342,9 +343,11 @@ class App {
       await metaStore.addVersion(name, unpubVersion);
 
       // TODO: Upload docs
-      return shelf.Response.found(_resolveUrl(req, '/api/packages/versions/newUploadFinish'));
+      return shelf.Response.found(
+          _resolveUrl(req, '/api/packages/versions/newUploadFinish'));
     } catch (err) {
-      return shelf.Response.found(_resolveUrl(req, '/api/packages/versions/newUploadFinish?error=$err'));
+      return shelf.Response.found(_resolveUrl(
+          req, '/api/packages/versions/newUploadFinish?error=$err'));
     }
   }
 
@@ -361,15 +364,15 @@ class App {
   Future<shelf.Response> addUploader(shelf.Request req, String name) async {
     var body = await req.readAsString();
     var email = Uri.splitQueryString(body)['email']!; // TODO: null
-    var operatorEmail = await _getUploaderEmail(req);
-    var package = await metaStore.queryPackage(name);
+    // var operatorEmail = await _getUploaderEmail(req);
+    // var package = await metaStore.queryPackage(name);
 
-    if (package?.uploaders?.contains(operatorEmail) == false) {
-      return _badRequest('no permission', status: HttpStatus.forbidden);
-    }
-    if (package?.uploaders?.contains(email) == true) {
-      return _badRequest('email already exists');
-    }
+    // if (package?.uploaders?.contains(operatorEmail) == false) {
+    //  return _badRequest('no permission', status: HttpStatus.forbidden);
+    // }
+    // if (package?.uploaders?.contains(email) == true) {
+    //  return _badRequest('email already exists');
+    // }
 
     await metaStore.addUploader(name, email);
     return _successMessage('uploader added');
@@ -378,17 +381,17 @@ class App {
   @Route.delete('/api/packages/<name>/uploaders/<email>')
   Future<shelf.Response> removeUploader(
       shelf.Request req, String name, String email) async {
-    email = Uri.decodeComponent(email);
-    var operatorEmail = await _getUploaderEmail(req);
-    var package = await metaStore.queryPackage(name);
+    // email = Uri.decodeComponent(email);
+    // var operatorEmail = await _getUploaderEmail(req);
+    // var package = await metaStore.queryPackage(name);
 
     // TODO: null
-    if (package?.uploaders?.contains(operatorEmail) == false) {
-      return _badRequest('no permission', status: HttpStatus.forbidden);
-    }
-    if (package?.uploaders?.contains(email) == false) {
-      return _badRequest('email not uploader');
-    }
+    // if (package?.uploaders?.contains(operatorEmail) == false) {
+    //  return _badRequest('no permission', status: HttpStatus.forbidden);
+    // }
+    // if (package?.uploaders?.contains(email) == false) {
+    //  return _badRequest('email not uploader');
+    // }
 
     await metaStore.removeUploader(name, email);
     return _successMessage('uploader removed');
