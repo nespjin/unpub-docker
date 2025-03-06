@@ -1,0 +1,91 @@
+From 75e50faa299aea55fbce31ade13f21a99a5cc6ca Mon Sep 17 00:00:00 2001
+From: Jack Jin <1756404649@qq.com>
+Date: Thu, 6 Mar 2025 01:45:04 +0800
+Subject: [PATCH 2/3] feat(infrastructure): add Dockerfile and
+ docker-compose.yaml for Unpub
+
+- Create Dockerfile to build Unpub container image
+- Add docker-compose.yaml to define Unpub and MongoDB services
+- Configure environment variables and expose necessary ports
+- Set up volume mounts for persistent data storage
+---
+ Dockerfile          | 27 +++++++++++++++++++++++++++
+ docker-compose.yaml | 32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 59 insertions(+)
+ create mode 100644 Dockerfile
+ create mode 100644 docker-compose.yaml
+
+diff --git a/Dockerfile b/Dockerfile
+new file mode 100644
+index 0000000..c4cf4f1
+--- /dev/null
++++ b/Dockerfile
+@@ -0,0 +1,27 @@
++ARG dart_version=2.19.6
++
++FROM dart:${dart_version}
++
++ENV PUB_HOSTED_URL="https://mirrors.tuna.tsinghua.edu.cn/dart-pub"
++
++WORKDIR /app
++
++COPY ./unpub/ ./source
++
++EXPOSE 4000
++
++WORKDIR /app/source
++
++RUN dart pub get && \
++  dart compile aot-snapshot bin/unpub.dart && \
++  cp bin/unpub.aot /app/unpub.aot && \
++  rm -r /app/source
++
++WORKDIR /app
++
++# ENTRYPOINT [ "dart", "run", "bin/unpub.dart", "--database", "mongodb://unpub-mongo-service:27017/dart_pub"]
++ENTRYPOINT [ "dartaotruntime", "unpub.aot", "--database", "mongodb://unpub-mongo-service:27017/dart_pub"]
++
++
++
++
+diff --git a/docker-compose.yaml b/docker-compose.yaml
+new file mode 100644
+index 0000000..348f30f
+--- /dev/null
++++ b/docker-compose.yaml
+@@ -0,0 +1,32 @@
++# name: unpub2_1-docker
++services:
++  unpub-mongo:
++    image: mongo:5.0.29
++    ports:
++      - "27017:27017"
++    restart: always
++    logging:
++      options:
++        max-size: 10m
++    volumes:
++      - ~/.unpub/mongo:/data/db
++    hostname: unpub-mongo-service
++    domainname: unpub-mongo-service.com
++    # networks:
++    #   - unpub-network
++
++  unpub:
++    build: .
++    ports:
++      - "4000:4000"
++    restart: always
++    depends_on:
++      - unpub-mongo
++    volumes:
++      - ~/.unpub/packages:/app/unpub-packages
++    # networks:
++    #   - unpub-network
++# networks:
++#   unpub-network:
++#     external: true
++#     driver: bridge
+-- 
+2.43.0
+

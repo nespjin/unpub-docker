@@ -1,4 +1,4 @@
-# name: unpub2_1-docker
+name: unpub-docker
 services:
   unpub-mongo:
     image: mongo:5.0.29

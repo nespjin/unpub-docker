@@ -6,11 +6,20 @@ ENV PUB_HOSTED_URL="https://mirrors.tuna.tsinghua.edu.cn/dart-pub"
 
 WORKDIR /app
 
-COPY ./unpub/ ./source
+RUN git clone https://github.com/pd4d10/unpub.git source
+
+COPY ./0001-feat-use-TUNA-mirror-for-upstream-and-simplify-code.patch source
+COPY ./0003-fix-app-update-package-redirect-URLs-to-include-API-.patch source
+
+WORKDIR /app/source
+RUN git checkout de8d01455cc09967e972841dc104fd9a4b959acc && \
+  git apply -- *.patch
+
+# COPY ./unpub/ ./source
 
 EXPOSE 4000
 
-WORKDIR /app/source
+WORKDIR /app/source/unpub
 
 RUN dart pub get && \
   dart compile aot-snapshot bin/unpub.dart && \
