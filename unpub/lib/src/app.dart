@@ -51,6 +51,7 @@ class App {
     required this.metaStore,
     required this.packageStore,
     // this.upstream = 'https://pub.dev',
+    // this.upstream = 'https://pub.flutter-io.cn',
     this.upstream = 'https://mirrors.tuna.tsinghua.edu.cn/dart-pub',
     this.googleapisProxy,
     this.overrideUploaderEmail,
@@ -157,7 +158,7 @@ class App {
 
     if (package == null) {
       return shelf.Response.found(
-          Uri.parse(upstream).resolve('/api/packages/$name').toString());
+          Uri.parse(upstream + '/api/packages/$name').toString());
     }
 
     package.versions.sort((a, b) {
@@ -187,9 +188,9 @@ class App {
 
     var package = await metaStore.queryPackage(name);
     if (package == null) {
-      return shelf.Response.found(Uri.parse(upstream)
-          .resolve('/api/packages/$name/versions/$version')
-          .toString());
+      return shelf.Response.found(
+          Uri.parse(upstream + '/api/packages/$name/versions/$version')
+              .toString());
     }
 
     var packageVersion =
@@ -206,9 +207,9 @@ class App {
       shelf.Request req, String name, String version) async {
     var package = await metaStore.queryPackage(name);
     if (package == null) {
-      return shelf.Response.found(Uri.parse(upstream)
-          .resolve('/packages/$name/versions/$version.tar.gz')
-          .toString());
+      return shelf.Response.found(
+          Uri.parse(upstream + '/packages/$name/versions/$version.tar.gz')
+              .toString());
     }
 
     if (isPubClient(req)) {
